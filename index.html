@@ -1,1 +1,923 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>本当に18歳以上ですか？</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: "Arial", "Meiryo", sans-serif;
+        background: #111;
+        background-image: url(checkAges.png), url(gohoubi\ \(2\).png);
+        background-repeat: no-repeat, no-repeat;
+        background-position: left top, right center;
+        background-size: auto, 400px;
+        color: white;
+        min-height: 100vh;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #game {
+        width: min(90%, 700px);
+        min-height: 450px;
+
+        background: #222;
+        border-radius: 20px;
+        padding: 40px;
+
+        text-align: center;
+
+        box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+        font-size: 32px;
+        margin-bottom: 30px;
+    }
+
+    h2 {
+        font-size: 26px;
+        line-height: 1.6;
+    }
+
+    p {
+        font-size: 18px;
+    }
+
+    button {
+        border: none;
+        border-radius: 12px;
+
+        padding: 15px 35px;
+        margin: 10px;
+
+        font-size: 20px;
+        font-weight: bold;
+
+        cursor: pointer;
+
+        transition: 0.15s;
+    }
+
+    button:hover {
+        transform: scale(1.05);
+    }
+
+    .yes {
+        background: #4caf50;
+        color: white;
+    }
+
+    .no {
+        background: #e53935;
+        color: white;
+    }
+
+    .difficulty {
+        display: block;
+        width: 80%;
+        margin: 15px auto;
+        background: #444;
+        color: white;
+    }
+
+    .difficulty:hover {
+        background: #666;
+    }
+
+    #timer-container {
+        width: 100%;
+        height: 15px;
+        background: #444;
+        border-radius: 10px;
+
+        overflow: hidden;
+        margin: 20px 0;
+    }
+
+    #timer-bar {
+        width: 100%;
+        height: 100%;
+        background: #4caf50;
+
+        transition: width 0.1s linear;
+    }
+
+    #timer-text {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    #progress {
+        color: #aaa;
+        margin-bottom: 10px;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .danger {
+        background: #e53935 !important;
+    }
+
+    #clear-image {
+    width: 250px;
+    max-height: 400px;
+
+    object-fit: contain;
+
+    display: block;
+    margin: 0 auto 20px;
+}
+
+    #message {
+        min-height: 30px;
+        color: #ffcc00;
+        font-weight: bold;
+    }
+    #answer-area {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+#character-image {
+    width: 180px;
+    max-height: 300px;
+
+    object-fit: contain;
+
+    display: none;
+
+    align-self: flex-end;
+}
+</style>
+</head>
+
+
+<body>
+<div id="game">
+
+
+    <div id="start-screen">
+
+        <h1>本当に18歳以上ですか？</h1>
+
+        <p>
+            あなたが本当に18歳以上なのか、<br>
+            いくつかの質問で確認します。
+        </p>
+
+        <button onclick="showDifficulty()">
+            スタート
+        </button>
+
+    </div>
+
+
+    <div id="difficulty-screen" class="hidden">
+
+        <h1><span style="color: orange;">“本当に”</span>18歳以上ですか？</h1>
+
+        <button class="difficulty" onclick="startGame('easy')">
+            EASY<br>
+            <small>制限時間：10秒</small>
+        </button>
+
+        <button class="difficulty" onclick="startGame('normal')">
+            NORMAL<br>
+            <small>制限時間：5秒</small>
+        </button>
+
+        <button class="difficulty" onclick="startGame('hard')">
+            HARD<br>
+            <small>制限時間：3秒</small>
+        </button>
+
+    </div>
+
+
+
+
+    <div id="game-screen" class="hidden">
+
+        <div id="progress"></div>
+    
+        <div id="timer-text">
+            10.0秒
+        </div>
+    
+        <div id="timer-container">
+            <div id="timer-bar"></div>
+        </div>
+    
+        <h2 id="question">
+            問題
+        </h2>
+    
+        <div id="message"></div>
+
+        <div id="answer-area">
+    
+            <button class="yes" onclick="answer(true)">
+                はい
+            </button>
+    
+            <button class="no" onclick="answer(false)">
+                いいえ
+            </button>
+    
+            <img id="character-image" src="" alt="キャラクター">
+    
+        </div>
+    
+    </div>
+
+
+
+
+    <div id="result-screen" class="hidden">
+
+        <div class="success">
+            <img id="clear-image" src="">
+        </div>
+
+        <h2>おめでとう！</h2>
+
+        <h3>
+            あなたは18歳以上だと<br>
+            確認できました！
+        </h3>
+
+        <p>
+            ……よかったねぇ。
+        </p>
+        <button onclick="location.reload()">
+            もう一度遊ぶ
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+
+
+
+const difficulties = {
+
+    easy: 10,
+
+    normal: 5,
+
+    hard: 3
+
+};
+
+
+
+
+const questions = [
+
+    {
+        question: "18歳以上ですか？",
+        answer: true,
+        comment:"18歳未満はお断りですよ～",
+        image: "mosimosi.png"
+        ,wrongImage: "atya-.png"
+
+    },
+
+    {
+        question: "本当に18歳以上ですか？",
+        answer: true,
+        comment:"18歳未満はお断りですよ～",
+        image: "mosimosi.png"
+        ,wrongImage: "atya-.png"
+    },
+
+    {
+        question: "あなたは18歳未満ではありませんか？",
+        answer: true,
+        comment:"18歳未満はお断りですよ～",
+        image: "mosimosi.png"
+        ,wrongImage: "atya-.png"
+    },
+
+    {
+        question: "18 × 36 は 628 ですか？",
+        answer: false,
+        comment:"こんなのも分かんないなんて、18歳未満ですね？",
+        image: "aori.png"
+    },
+
+    {
+        question: "あなたはニーチェです。あなたは神を信じますか？",
+        answer: false,
+        comment:"「神は死んだ。」by ドイツの哲学者、フリードリヒ・ニーチェ",
+        image: "smart.png"
+    },
+
+    {
+        question: "「はい」と答えるつもりですか？",
+        answer: true,
+        image: "base.png"
+        ,wrongImage: "atya-.png"
+    },
+
+    {
+        question: "実は18歳以下ではなくもないですよね？",
+        answer: false,
+        comment:"18歳未満はお断りですよ～",
+        image: "hatena.png"
+        ,wrongImage: "atya-.png"
+    },
+
+    {
+        question: "あなたは今、このゲームをプレイしていますか？",
+        answer: true,
+        image: "base.png"
+        ,wrongImage: "atya-.png"
+    },
+
+    {
+        question: "太陽は西から昇りますか？",
+        answer: false,
+        comment:"18年生きていれば、必ず分かると思うのですが・・・",
+        image: "hatena.png"
+        ,wrongImage: "atya-.png"
+    },
+
+    {
+        question: "あなたは佐藤さんですか？",
+        answer: true,
+        comment:"いや、アナタは佐藤さんです。私がそう言ってるんだから、佐藤の方がいい",
+        image: "wow.png"
+    },
+
+    {
+        question: "事実は小説よりも奇なり",
+        answer: true,
+        comment: "君の人生に限っては違うんじゃないかな",
+        image: "smart.png"
+        ,wrongImage: "atya-.png"
+    },
+
+    {
+        question: "あなたはロボットではありませんか？",
+        answer: true,
+        comment:"ロボットさんはお断りですよ～",
+        image: "mosimosi.png"
+    },
+
+    {
+        question: "善院直哉 ← 人の心とか無いんか？",
+        answer: false,
+        comment:"堪忍してぇや、俺は「善」院やでぇ？",
+        image: "naoya.png"
+    },
+
+    {
+        question: "カピバラは有袋類",
+        answer: false,
+        image: "base.png",
+        comment: "カピバラは人と同じように、おなかの中で子供を育てる有胎盤類だよ～"
+        ,wrongImage: "atya-.png"
+    },
+
+    {
+        question: "18歳以上ではない、ということはありませんか？",
+        answer: true,
+        comment:"18歳未満はお断りですよ～",
+        image: "mosimosi.png"
+        ,wrongImage: "atya-.png"
+    },
+    {
+        question: "DIO様は最高に・・・？",
+        answer: true,
+        comment:"ハイってやつだぁ～！",
+        image: "high.png"
+    },
+    {
+        question: "そして～か～がや～くウルトラソウル！",
+        answer: true,
+        comment:"ハイ！",
+        image: "music.png"
+    },
+    {
+        question: "ニャオハは立つ",
+        answer: false,
+        comment:"冷静になれ、立つのはマスカーニャだ。ついでにマスカーニャで勃(殴",
+        image: "nyan.png"
+    },
+    {
+        question: "お前も鬼にならないか？",
+        answer: true,
+        comment:"鬼にならないなら殺す",
+        image: "hakaisatsu.png"
+    },
+    {
+        question: "空気中の酸素を血液中に取り込み、不要になった二酸化炭素を体外へ排出する「ガス交換（外呼吸）」を行う胸腔内の臓器は？",
+        answer: true,
+        comment:"18歳以上で肺も知らないやつがいる訳ないでしょ！",
+        image: "hatena.png"
+        ,wrongImage: "angry.png"
+    },
+    {
+        question: "恋人がいる",
+        answer: false,
+        comment:"リア充爆発しろ",
+        image: "angry.png"
+    },
+    {
+        question: "カピバラ、アジアゾウ、ウサイン・ボルト　この中で一番速いのはカピバラ",
+        answer: true,
+        comment:"投稿主のチャンネルページ見れば分かるよ？",
+        image: "wow.png"
+        ,wrongImage: "atya-.png"
+    },
+    {
+        question: "良い家、〇〇、言え",
+        answer: false,
+        comment:"言葉遊びは嫌いかね？",
+        image: "hatena.png"
+        ,wrongImage: "atya-.png"
+    },
+    {
+        question: "ジブリ初の作品は「となりのトトロ」である",
+        answer: false,
+        comment:"どうやら正式にはラピュタらしいね、ちなみにそれより前にナウシカが作られてるよ",
+        image: "totoro.png"
+    },
+    {
+        question: "ティーダのち〇ぽ気持ち良すぎだろ！",
+        answer: true,
+        comment:"ワッカさんは18歳以上だからオッケーなんだよね、ちなみに23歳",
+        image: "surprise.png"
+    },
+    {
+        question: "附子 ← お前ブスだなwww",
+        answer: true,
+        comment:"猛毒の植物、トリカブトの事なんだって。「ブス」の語源らしいよ。",
+        image: "laugh.png"
+    },
+    {
+        question: "江っっっ戸幕府が成立したのは1600年",
+        answer: false,
+        comment:"それは関ケ原の戦い終結だよね、幕府成立は1603年だよぉ",
+        image: "smart.png"
+        ,wrongImage: "atya-.png"
+    },
+    {
+        question: "・・・君、可愛いねぇ・・・♡",
+        answer: false,
+        comment:"一旦鏡見た方が良い",
+        image: "donbiki.png"
+
+    },
+    {
+        question: "投稿主にチャンネル登録しろぉ！",
+        answer: true,
+        comment:"してよぉ！し～て～よぉ！(ｼﾞﾀﾊﾞﾀ",
+        image: "dada.png"
+    },
+    {
+        question: "その心笑ってるね！？",
+        answer: true,
+        comment:"笑ってる方が楽しいよ？",
+        image: "laugh.png"
+    },
+    {
+        question: "A特化ガラルマッギョの攻撃種族値は108である",
+        answer: false,
+        comment:"実は146もあるんだよね・・・無振ガブリアスのAとほぼ一緒だよ",
+        image: "pokemon.png"
+    },
+    {
+        question: "リオレウスは♂しかいない",
+        answer: true,
+        comment:"リオレウスかっこいいよねぇ・・・ちなみに♀がリオレイアだよ",
+        image: "gao.png"
+    },
+    {
+        question: "真である命題の対偶は常に真",
+        answer: true,
+        comment:"「カラスなら黒い」⇔「黒くなければカラスではない」",
+        image: "hatena.png"
+        ,wrongImage: "atya-.png"
+    },
+    {
+        question: "いいえって答えて？",
+        answer: false,
+        comment:"従順なのか反抗的なのか分からないね",
+        image: "please.png"
+    },
+    {
+        question: "雨の日は、気を付けて運転しなくてはならない",
+        answer: false,
+        comment:"晴れの日は？晴れの日は気を付けなくて良いの？",
+        image: "drive.png"
+        ,wrongImage: "atya-.png"
+    },
+    {
+        question: "DNAの正式名称は、デオシキリボ核酸",
+        answer: false,
+        comment:"焦らないで、「デオキシリボ核酸」だよ。",
+        image: "smart.png"
+        ,wrongImage: "atya-.png"
+    },
+    {
+        question: "18歳未満だった事が無きにしも非ず",
+        answer: true,
+        comment:"18歳未満はお断りですよ～",
+        image: "mosimosi.png"
+        ,wrongImage: "atya-.png"
+    },
+    {
+        question: "・・・そうだよ、金だ。俺はここに骨を埋める覚悟で、別班を売ったんだ。",
+        answer: false,
+        comment:"「私に嘘はつかないでー！」 ネタばれになるのでこれ以上は言えませんが、金の為ではないらしいですね～",
+        image: "uso.png"
+    },
+    {
+        question: "アルファベットは26個",
+        answer: true,
+        comment:"え？w知らないんですか？w",
+        image: "aori.png"
+    },
+    {
+        question: "もすかうの元ネタはロシア人作曲",
+        answer: false,
+        comment:"西ドイツの音楽グループ、ジンギスカンの曲なんだって",
+        image: "music.png"
+    },
+    {
+        question: "一番面積が大きい県は岩手である",
+        answer: true,
+        comment:"北海道はでっかいどうだけど質問は「県」だよ、ちゃんと読んでね",
+        image: "aori.png"
+        ,wrongImage: "atya-.png"
+    },
+
+
+];
+
+
+
+let currentQuestions = [];
+
+let currentQuestionIndex = 0;
+
+let currentDifficulty = "easy";
+
+let timeLimit = 10;
+
+let remainingTime = 10;
+
+let timer = null;
+
+
+function hideAllScreens() {
+
+    document.getElementById("start-screen")
+        .classList.add("hidden");
+
+    document.getElementById("difficulty-screen")
+        .classList.add("hidden");
+
+    document.getElementById("game-screen")
+        .classList.add("hidden");
+
+    document.getElementById("result-screen")
+        .classList.add("hidden");
+
+}
+
+
+function showDifficulty() {
+
+    hideAllScreens();
+
+    document.getElementById("difficulty-screen")
+        .classList.remove("hidden");
+
+}
+
+
+
+function startGame(difficulty) {
+
+currentDifficulty = difficulty;
+
+timeLimit = difficulties[difficulty];
+
+
+
+const firstQuestion = questions[0];
+
+
+const otherQuestions = questions.slice(1);
+
+
+shuffle(otherQuestions);
+
+
+
+
+
+currentQuestions = [
+
+    firstQuestion,
+
+    ...otherQuestions.slice(0, 24)
+
+];
+
+
+
+
+currentQuestionIndex = 0;
+
+hideAllScreens();
+
+document.getElementById("game-screen")
+    .classList.remove("hidden");
+
+showQuestion();
+
+}
+
+
+function shuffle(array) {
+
+    for (let i = array.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[j]] =
+        [array[j], array[i]];
+
+    }
+
+}
+
+
+function showQuestion() {
+
+clearInterval(timer);
+
+
+if (currentQuestionIndex >= currentQuestions.length) {
+
+    gameClear();
+
+    return;
+}
+
+
+const current =
+    currentQuestions[currentQuestionIndex];
+
+
+
+document.getElementById("question")
+    .textContent = current.question;
+
+
+
+
+document.getElementById("progress")
+    .textContent =
+    `問題 ${currentQuestionIndex + 1} / ${currentQuestions.length}`;
+
+
+document.getElementById("message")
+    .textContent = "";
+
+
+
+
+const characterImage =
+    document.getElementById("character-image");
+
+
+if (current.image) {
+
+    characterImage.src = current.image;
+
+    characterImage.style.display = "block";
+
+} else {
+
+    characterImage.style.display = "none";
+
+}
+
+
+
+startTimer();
+
+}
+
+
+
+function startTimer() {
+
+    remainingTime = timeLimit;
+
+    updateTimerDisplay();
+
+
+    const startTime = Date.now();
+
+
+    timer = setInterval(() => {
+
+        const elapsed =
+            (Date.now() - startTime) / 1000;
+
+        remainingTime =
+            timeLimit - elapsed;
+
+
+        if (remainingTime <= 0) {
+
+            remainingTime = 0;
+
+            updateTimerDisplay();
+
+            clearInterval(timer);
+
+            gameOver("時間切れ！最初からやり直しです。");
+
+            return;
+        }
+
+
+        updateTimerDisplay();
+
+    }, 50);
+
+}
+
+
+
+function updateTimerDisplay() {
+
+    const text =
+        remainingTime.toFixed(1) + "秒";
+
+    document.getElementById("timer-text")
+        .textContent = text;
+
+
+    const percentage =
+        (remainingTime / timeLimit) * 100;
+
+
+    const bar =
+        document.getElementById("timer-bar");
+
+
+    bar.style.width =
+        percentage + "%";
+
+
+
+    if (percentage <= 30) {
+
+        bar.classList.add("danger");
+
+    } else {
+
+        bar.classList.remove("danger");
+
+    }
+
+}
+
+
+
+function answer(playerAnswer) {
+
+clearInterval(timer);
+
+const current =
+    currentQuestions[currentQuestionIndex];
+
+
+
+if (playerAnswer === current.answer) {
+
+    currentQuestionIndex++;
+
+    showQuestion();
+
+}
+
+
+
+
+else {
+
+
+    const message =
+        current.comment ||
+        "残念！答えが違います。";
+
+    gameOver(message);
+
+}
+
+}
+
+
+
+
+function gameOver(message) {
+
+    clearInterval(timer);
+
+
+    const current =
+        currentQuestions[currentQuestionIndex];
+
+
+
+    const characterImage =
+        document.getElementById("character-image");
+
+
+    if (current.wrongImage) {
+
+        characterImage.src =
+            current.wrongImage;
+
+        characterImage.style.display =
+            "block";
+
+    }
+
+
+
+    document.getElementById("message")
+        .textContent = message;
+
+
+    
+
+    setTimeout(() => {
+
+        showDifficulty();
+
+    }, 4800);
+
+}
+
+
+
+function gameClear() {
+
+    clearInterval(timer);
+    const clearImages = {
+
+easy: "syugo.png",
+
+normal: "finish.png",
+
+hard: "gohoubi.png"
+
+};
+
+
+
+document.getElementById("clear-image").src =
+clearImages[currentDifficulty];
+
+    hideAllScreens();
+
+    document.getElementById("result-screen")
+        .classList.remove("hidden");
+
+}
+
+</script>
+
+</body>
+</html>
